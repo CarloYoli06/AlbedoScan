@@ -1,0 +1,42 @@
+# Dependencias
+node_modules/
+
+# Build / distribución
+dist/
+out/
+
+# Archivos temporales de Electron
+*.log
+npm-debug.log*
+
+# Caché de Electron / Chromium
+.cache/
+app-update.yml
+
+# Assets generados
+assets/gen-icon.ps1
+make-ico.js
+assets/icon.svg
+
+# Archivos temporales de escaneo (se guardan en %TEMP%)
+temp/
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Variables de entorno
+.env
+.env.local
+
+# Electron Builder caché
+.electron-builder-cache/

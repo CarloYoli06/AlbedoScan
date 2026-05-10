@@ -1,0 +1,41 @@
+{
+  "name": "escaner-albedo",
+  "version": "1.0.0",
+  "description": "Aplicación profesional de escaneo para Windows",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --enable-logging",
+    "build": "electron-builder --win --x64",
+    "pack": "electron-builder --dir"
+  },
+  "dependencies": {
+    "pdfkit": "^0.15.0"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.albedo.escaner",
+    "productName": "Escaner Albedo",
+    "copyright": "Escaner Albedo",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Escaner Albedo"
+    },
+    "files": ["**/*", "!node_modules/.cache/**", "!dist/**", "!.git/**"],
+    "extraResources": [
+      { "from": "scripts", "to": "scripts", "filter": ["**/*.ps1"] }
+    ]
+  }
+}

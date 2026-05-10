@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self'"/>
+  <title>Escaner Albedo</title>
+  <link rel="stylesheet" href="./styles/main.css"/>
+</head>
+<body>
+
+<!-- ── Titlebar ───────────────────────────────────────────────────────────── -->
+<div id="titlebar">
+  <div class="titlebar-logo">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <path d="M8 12h8M12 8v8"/>
+      <circle cx="18.5" cy="5.5" r="2.5" fill="currentColor" stroke="none"/>
+    </svg>
+    Escaner Albedo
+  </div>
+  <div class="titlebar-controls">
+    <button class="titlebar-btn" id="btn-min" title="Minimizar">&#x2212;</button>
+    <button class="titlebar-btn" id="btn-max" title="Maximizar">&#x25A1;</button>
+    <button class="titlebar-btn close" id="btn-close" title="Cerrar">&#x2715;</button>
+  </div>
+</div>
+
+<!-- ── App Layout ─────────────────────────────────────────────────────────── -->
+<div id="app">
+
+  <!-- Sidebar Izquierdo -->
+  <div id="sidebar-left">
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Escáner</div>
+
+      <!-- Dispositivo recordado -->
+      <div id="saved-device-panel">
+        <div id="saved-device-name" style="font-size:12px; font-weight:600; color:var(--text-primary); margin-bottom:4px; word-break:break-word;">—</div>
+        <div id="saved-device-sub" style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">Ningún escáner seleccionado</div>
+        <button class="btn btn-secondary btn-sm" id="btn-change-scanner" style="width:100%; margin-bottom:6px;">
+          🔄 Cambiar escáner
+        </button>
+      </div>
+
+      <div id="scanner-status">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Iniciando…</span>
+      </div>
+    </div>
+
+    <!-- Páginas escaneadas -->
+    <div id="pages-section" class="sidebar-section" style="flex:1; border-bottom:none; padding-bottom:0; overflow:hidden; display:flex; flex-direction:column;">
+      <div class="sidebar-title" style="flex-shrink:0;">Páginas</div>
+      <div id="pages-list"></div>
+      <div id="no-pages-msg">No hay páginas.<br>Pulsa <b>Escanear</b> para comenzar.</div>
+    </div>
+
+    <!-- Acciones páginas -->
+    <div class="sidebar-actions">
+      <button class="btn btn-secondary btn-sm" id="btn-clear-all" style="flex:1;" disabled>
+        🗑 Limpiar todo
+      </button>
+    </div>
+
+    <!-- Botón Escanear principal (modo inteligente) -->
+    <button id="btn-scan">
+      <svg class="scan-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M3 9V6a2 2 0 012-2h3M15 4h3a2 2 0 012 2v3M21 15v3a2 2 0 01-2 2h-3M9 20H6a2 2 0 01-2-2v-3"/>
+        <line x1="7" y1="12" x2="17" y2="12"/>
+      </svg>
+      <span id="scan-btn-text">Escanear</span>
+    </button>
+
+    <!-- Botón modo nativo (WiFi/red) -->
+    <button id="btn-scan-native" title="Abre el diálogo nativo de Windows — funciona con escáneres WiFi y de red">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M5 12.55a11 11 0 0114.08 0"/><path d="M1.42 9a16 16 0 0121.16 0"/>
+        <path d="M8.53 16.11a6 6 0 016.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+      Diálogo nativo (WiFi)
+    </button>
+
+  </div><!-- /sidebar-left -->
+
+  <!-- Área central -->
+  <div id="main-area">
+
+    <!-- Toolbar edición -->
+    <div id="editor-toolbar">
+      <button class="tool-btn" id="tool-crop" disabled title="Recorte manual">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2v14a2 2 0 002 2h14"/><path d="M18 22V8a2 2 0 00-2-2H2"/>
+        </svg>
+        Recortar
+      </button>
+      <button class="tool-btn" id="tool-autocrop" disabled title="Auto-recortar espacios en blanco">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 3l14 9-14 9V3z"/>
+        </svg>
+        Auto-recorte
+      </button>
+      <button class="tool-btn" id="tool-crop-apply" disabled style="display:none;" title="Aplicar recorte">
+        ✓ Aplicar
+      </button>
+      <button class="tool-btn" id="tool-crop-cancel" disabled style="display:none;" title="Cancelar recorte">
+        ✕ Cancelar
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <button class="tool-btn" id="tool-rot-left" disabled title="Rotar 90° izquierda">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 12a9 9 0 109-9H8"/><polyline points="4 4 4 10 10 10"/>
+        </svg>
+        ↺
+      </button>
+      <button class="tool-btn" id="tool-rot-right" disabled title="Rotar 90° derecha">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 12a9 9 0 11-9-9h4"/><polyline points="20 4 20 10 14 10"/>
+        </svg>
+        ↻
+      </button>
+      <button class="tool-btn" id="tool-flip-h" disabled title="Voltear horizontal">⇄</button>
+
+      <div class="toolbar-sep"></div>
+
+      <button class="tool-btn" id="tool-zoom-in"  disabled>+</button>
+      <span id="zoom-label">—</span>
+      <button class="tool-btn" id="tool-zoom-out" disabled>−</button>
+      <button class="tool-btn" id="tool-zoom-fit" disabled title="Ajustar a pantalla">⊡</button>
+
+      <div class="toolbar-sep" style="margin-left:auto;"></div>
+      <button class="tool-btn" id="tool-reset-edits" disabled title="Deshacer todos los ajustes">
+        ↩ Restablecer
+      </button>
+    </div>
+
+    <!-- Banner autocrop -->
+    <div id="autocrop-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <span>Se detectó espacio en blanco. ¿Aplicar auto-recorte?</span>
+      <div class="banner-actions">
+        <button class="btn btn-secondary btn-sm" id="banner-accept">Aplicar</button>
+        <button class="btn btn-secondary btn-sm" id="banner-dismiss">✕</button>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div id="canvas-wrapper">
+      <div id="canvas-placeholder">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M8 12h8M12 8v8"/>
+        </svg>
+        <h3>Escaner Albedo</h3>
+        <p>Selecciona un escáner y pulsa el botón <b>Escanear</b> para comenzar.</p>
+      </div>
+      <div id="canvas-container" style="display:none;">
+        <canvas id="main-canvas"></canvas>
+        <canvas id="crop-canvas"></canvas>
+      </div>
+    </div>
+
+  </div><!-- /main-area -->
+
+  <!-- Sidebar Derecho (configuración + exportar) -->
+  <div id="sidebar-right">
+
+    <!-- Config escaneo -->
+    <div class="right-section">
+      <div class="sidebar-title">Configuración</div>
+
+      <div class="field-label">Resolución (DPI)</div>
+      <select class="styled-select" id="cfg-dpi">
+        <option value="75">75 dpi — Rápido</option>
+        <option value="150">150 dpi — Normal</option>
+        <option value="300" selected>300 dpi — Alta calidad</option>
+        <option value="600">600 dpi — Máxima calidad</option>
+      </select>
+
+      <div class="field-label">Modo de color</div>
+      <select class="styled-select" id="cfg-color">
+        <option value="2" selected>Color</option>
+        <option value="1">Escala de grises</option>
+        <option value="0">Blanco y Negro</option>
+      </select>
+
+      <div class="field-label">Brillo <span id="lbl-brightness">0</span></div>
+      <div class="slider-row">
+        <input type="range" id="cfg-brightness" min="-1000" max="1000" value="0" step="50"/>
+      </div>
+
+      <div class="field-label">Contraste <span id="lbl-contrast">0</span></div>
+      <div class="slider-row">
+        <input type="range" id="cfg-contrast" min="-1000" max="1000" value="0" step="50"/>
+      </div>
+    </div>
+
+    <!-- Ajustes imagen (post-escaneo) -->
+    <div class="right-section">
+      <div class="sidebar-title">Ajuste visual</div>
+      <div class="field-label">Brillo imagen <span id="lbl-img-brightness">0</span></div>
+      <div class="slider-row">
+        <input type="range" id="img-brightness" min="-100" max="100" value="0"/>
+      </div>
+      <div class="field-label">Contraste imagen <span id="lbl-img-contrast">0</span></div>
+      <div class="slider-row">
+        <input type="range" id="img-contrast" min="-100" max="100" value="0"/>
+      </div>
+      <div class="field-label">Nitidez <span id="lbl-img-sharpness">0</span></div>
+      <div class="slider-row">
+        <input type="range" id="img-sharpness" min="0" max="10" value="0"/>
+      </div>
+    </div>
+
+    <!-- Exportar -->
+    <div class="right-section">
+      <div class="sidebar-title">Exportar</div>
+
+      <div class="field-label">Formato</div>
+      <select class="styled-select" id="cfg-format">
+        <option value="pdf" selected>PDF (una o varias páginas)</option>
+        <option value="jpg">JPG (por página)</option>
+        <option value="png">PNG (por página)</option>
+      </select>
+
+      <div id="pdf-options">
+        <div class="field-label">Tamaño de página</div>
+        <select class="styled-select" id="cfg-page-size">
+          <option value="a4">A4</option>
+          <option value="letter" selected>Carta (Letter)</option>
+        </select>
+      </div>
+
+      <div class="field-label">Carpeta de destino</div>
+      <button class="btn btn-secondary btn-sm" id="btn-pick-folder" style="margin-bottom:8px;">
+        📁 Seleccionar carpeta…
+      </button>
+      <div id="dest-folder-label" style="font-size:10px; color:var(--text-muted); word-break:break-all; margin-bottom:10px;">
+        (Carpeta de Documentos)
+      </div>
+
+      <button class="btn btn-success" id="btn-export" disabled>
+        💾 Guardar
+      </button>
+      <button class="btn btn-secondary" id="btn-open-folder" style="margin-top:6px;" disabled>
+        📂 Abrir carpeta
+      </button>
+      <button class="btn btn-danger" id="btn-clear-edits" style="margin-top:6px;" disabled title="Descarta todos los recortes, rotaciones y ajustes. Las imágenes originales escaneadas no se borran.">
+        ↩ Limpiar ediciones
+      </button>
+    </div>
+
+  </div><!-- /sidebar-right -->
+
+</div><!-- /app -->
+
+<!-- Scan overlay -->
+<div id="scan-overlay">
+  <div class="scan-spinner"></div>
+  <div class="scan-overlay-text">Escaneando…</div>
+  <div class="scan-overlay-sub">Por favor no mueva el documento</div>
+</div>
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<script src="./js/editor.js"></script>
+<script src="./js/app.js"></script>
+</body>
+</html>
